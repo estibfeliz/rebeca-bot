@@ -29,7 +29,7 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-    // Permitir leer mensajes de bots de música o embeds, pero ignorar a Rebeca
+    // Si el mensaje lo envió la propia Rebeca, ignorar para evitar bucles
     if (message.author.id === client.user.id) return;
 
     const content = message.content.toLowerCase().trim();
@@ -37,25 +37,41 @@ client.on('messageCreate', async (message) => {
     const authorName = message.author.username;
     const isEstib = authorName.toLowerCase().includes('estib') || authorName === 'El amor';
 
-    // --- REACCIÓN AUTOMÁTICA A COMANDOS Y EMBEDS DE MÚSICA (FLAPY / SLASH COMMANDS) ---
+    // --- DETECCIÓN ESPECÍFICA PARA FLAVIBOT Y BOT DE MÚSICA ---
+    let songQuery = "";
+    let isMusicEvent = false;
+
+    // 1. Detectar si un usuario usó comando directo de texto
     const musicPrefixes = ['-play', '-p', '!play', '!p', '/play', '/p', 'flapy play', 'flapy p'];
-    const isMusicCommand = musicPrefixes.some(prefix => content.startsWith(prefix));
-    
-    // También detecta si un bot de música manda embeds o títulos de reproducción (por si usa barra "/")
-    const isMusicBotEmbed = message.author.bot && (content.includes('playing') || content.includes('reproduciendo') || message.embeds.length > 0);
+    if (musicPrefixes.some(prefix => content.startsWith(prefix))) {
+        isMusicEvent = true;
+        songQuery = content.replace(/^([-!/](play|p)|flapy (play|p))/i, '').trim();
+    }
 
-    if (isMusicCommand || isMusicBotEmbed) {
-        // Probabilidad del 35% (0.35) para responder
-        const randomChance = Math.random();
-        if (randomChance <= 0.35) {
-            // Extraer la búsqueda o nombre de la canción de manera segura
-            let songQuery = content.replace(/^([-!/](play|p)|flapy (play|p))/i, '').trim();
-            if (!songQuery && message.embeds.length > 0 && message.embeds[0].title) {
-                songQuery = message.embeds[0].title;
+    // 2. Detectar la respuesta de FlaviBot o embeds de música
+    if (message.author.bot && message.author.username.toLowerCase().includes('flavi')) {
+        isMusicEvent = true;
+        // Si el mensaje contiene "añadido" o "a la cola" (como en la imagen)
+        if (content.includes('añadido') || content.includes('a la cola')) {
+            // Intentar extraer lo que está entre 'Añadido' y 'a la cola'
+            const match = message.content.match(/Añadido\s+(.+?)\s+-?\s*\d*:\d*\s*a la cola/i) || message.content.match(/Añadido\s+(.+?)\s+a la cola/i);
+            if (match && match[1]) {
+                songQuery = match[1].trim();
             }
-            if (!songQuery) songQuery = "una canción";
+        }
+    }
 
-            // Lista de palabras clave asociadas a Banda / Regional Mexicano
+    // Si también vienen títulos dentro de los embeds de FlaviBot
+    if (isMusicEvent && !songQuery && message.embeds.length > 0) {
+        if (message.embeds[0].title) songQuery = message.embeds[0].title;
+        else if (message.embeds[0].description) songQuery = message.embeds[0].description;
+    }
+
+    if (isMusicEvent) {
+        // Probabilidad del 35% de opinar sobre la música
+        if (Math.random() <= 0.35) {
+            if (!songQuery) songQuery = "esa rola";
+
             const bandaKeywords = [
                 'banda', 'corridos', 'corrido', 'norteño', 'norteno', 'grupo firme', 
                 'julion', 'julión', 'ms', 'el komander', 'pesado', 'calibre 50', 
@@ -64,15 +80,15 @@ client.on('messageCreate', async (message) => {
                 'banda ms', 'arrolladora', 'la adictiva', 'tucanes', 'cardenales'
             ];
 
-            const isBanda = bandaKeywords.some(keyword => songQuery.includes(keyword));
+            const isBanda = bandaKeywords.some(keyword => songQuery.toLowerCase().includes(keyword));
 
             try {
                 await message.channel.sendTyping();
 
                 const musicPrompt = isBanda
-                    ? `El usuario o bot acaba de poner la canción de banda/regional "${songQuery}".
-                       REGLAS: Halaga la canción o el gusto musical usando modismos mexicanos de forma casual (1 a 2 renglones cortos). Di que es un rolón, que esa sí es música o pon algo alegre estilo fiesta mexicana. Si mencionan a Estib/El amor, ponte un poquitito apenada/complacida.`
-                    : `El usuario o bot acaba de poner la canción "${songQuery}".
+                    ? `Acaban de poner la canción de banda/regional "${songQuery}" en el servidor.
+                       REGLAS: Halaga la canción o el gusto musical usando modismos mexicanos casuales (1 a 2 renglones cortos). Di que es un rolón, que esa sí es música o pon algo alegre estilo fiesta mexicana. Si la puso Estib/El amor, ponte un poquitito apenada/complacida.`
+                    : `Acaban de poner la canción "${songQuery}" en el servidor.
                        REGLAS: Insulta o critica sarcásticamente la canción o los feos gustos musicales usando modismos mexicanos y humor negro/ácido (1 a 2 renglones cortos). Di cosas como "qué rola tan más fea", "me van a sangrar los oídos", "quiten eso porfa", etc. Con estilo tsundere/sarcástico.`;
 
                 const completion = await groq.chat.completions.create({
@@ -101,7 +117,7 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // Si el mensaje es de otro bot que no mandó comandos de música, lo ignoramos para evitar bucles o chats innecesarios
+    // Si es otro bot que no es FlaviBot enviando cosas normales, lo ignoramos
     if (message.author.bot) return;
 
     // --- COMANDOS DE INTERACCIÓN EN ESPAÑOL ---
@@ -128,7 +144,7 @@ client.on('messageCreate', async (message) => {
         // PROTECCIÓN ESPECIAL: NADIE PUEDE BESAR A REBECA
         if ((command === '!beso' || command === '!besar') && targetUser && targetUser.id === client.user.id) {
             const rejectionText = isEstib 
-                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper roja, se ajusta los lentes y voltea a otro lado-*\n¡O-oye! ¿Qué te pasa? ¡Not hagas eso aquí en público, despistado! 🫣`
+                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper roja, se ajusta los lentes y voltea a otro lado-*\n¡O-oye! ¿Qué te pasa? ¡No hagas eso aquí en público, despistado! 🫣`
                 : `**${authorName}** intentó besar a Rebeca... 🛑\n*-le da un empujón con cara de asco-*\n¡Ni lo sueñes! Aléjate de mí, qué asco me das... 🙄`;
 
             const gifUrl = await fetchAnimeGif('slap');
