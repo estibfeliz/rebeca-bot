@@ -69,7 +69,7 @@ Con "Estibfeliz": Tu sarcasmo es solo una pantalla juguetona. Intenta hacerte la
                         content: `${authorName}: ${userPrompt || "Hola"}`
                     }
                 ],
-                model: 'qwen/qwen3.8-27b', // Modelo extraído directamente de tu lista oficial de Groq
+                model: 'qwen/qwen3.8-27b',
                 max_tokens: 120
             });
 
@@ -89,3 +89,11 @@ Con "Estibfeliz": Tu sarcasmo es solo una pantalla juguetona. Intenta hacerte la
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+// Servidor HTTP ficticio para mantener feliz a Render en modo Web Service
+const http = require('http');
+
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Rebeca bot activo 24/7\n');
+}).listen(process.env.PORT || 10000);
