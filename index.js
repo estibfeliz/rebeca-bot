@@ -29,72 +29,80 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
+    // Permitir leer mensajes de bots de música o embeds, pero ignorar a Rebeca
+    if (message.author.id === client.user.id) return;
 
     const content = message.content.toLowerCase().trim();
     const targetUser = message.mentions.users.first();
     const authorName = message.author.username;
     const isEstib = authorName.toLowerCase().includes('estib') || authorName === 'El amor';
 
-    // --- REACCIÓN AUTOMÁTICA A COMANDOS DE MÚSICA (FLAPY) ---
-    // Detecta comandos típicos de reproductores de música (play, p, reproduce)
-    const musicPrefixes = ['-play', '-p', '!play', '!p', '/play', 'flapy play', 'flapy p'];
+    // --- REACCIÓN AUTOMÁTICA A COMANDOS Y EMBEDS DE MÚSICA (FLAPY / SLASH COMMANDS) ---
+    const musicPrefixes = ['-play', '-p', '!play', '!p', '/play', '/p', 'flapy play', 'flapy p'];
     const isMusicCommand = musicPrefixes.some(prefix => content.startsWith(prefix));
+    
+    // También detecta si un bot de música manda embeds o títulos de reproducción (por si usa barra "/")
+    const isMusicBotEmbed = message.author.bot && (content.includes('playing') || content.includes('reproduciendo') || message.embeds.length > 0);
 
-    if (isMusicCommand) {
+    if (isMusicCommand || isMusicBotEmbed) {
         // Probabilidad del 35% (0.35) para responder
         const randomChance = Math.random();
         if (randomChance <= 0.35) {
-            // Extraer la búsqueda o nombre de la canción
-            const songQuery = content.replace(/^[-!/](play|p)|flapy (play|p)/i, '').trim();
+            // Extraer la búsqueda o nombre de la canción de manera segura
+            let songQuery = content.replace(/^([-!/](play|p)|flapy (play|p))/i, '').trim();
+            if (!songQuery && message.embeds.length > 0 && message.embeds[0].title) {
+                songQuery = message.embeds[0].title;
+            }
+            if (!songQuery) songQuery = "una canción";
 
-            if (songQuery.length > 0) {
-                // Lista de palabras clave asociadas a Banda / Regional Mexicano
-                const bandaKeywords = [
-                    'banda', 'corridos', 'corrido', 'norteño', 'norteno', 'grupo firme', 
-                    'julion', 'julión', 'ms', 'el komander', 'pesado', 'calibre 50', 
-                    'fuerza regida', 'carin leon', 'carín león', 'fidel', 'junior h', 
-                    'natanael', 'peso pluma', 'chalino', 'alfredo olivas', 'intocable',
-                    'banda ms', 'arrolladora', 'la adictiva', 'tucanes', 'cardenales'
-                ];
+            // Lista de palabras clave asociadas a Banda / Regional Mexicano
+            const bandaKeywords = [
+                'banda', 'corridos', 'corrido', 'norteño', 'norteno', 'grupo firme', 
+                'julion', 'julión', 'ms', 'el komander', 'pesado', 'calibre 50', 
+                'fuerza regida', 'carin leon', 'carín león', 'fidel', 'junior h', 
+                'natanael', 'peso pluma', 'chalino', 'alfredo olivas', 'intocable',
+                'banda ms', 'arrolladora', 'la adictiva', 'tucanes', 'cardenales'
+            ];
 
-                const isBanda = bandaKeywords.some(keyword => songQuery.includes(keyword));
+            const isBanda = bandaKeywords.some(keyword => songQuery.includes(keyword));
 
-                try {
-                    await message.channel.sendTyping();
+            try {
+                await message.channel.sendTyping();
 
-                    const musicPrompt = isBanda
-                        ? `El usuario "${authorName}" acaba de poner la canción de banda/regional "${songQuery}" en el bot de música.
-                           REGLAS: Halaga la canción o el gusto musical del usuario usando modismos mexicanos de forma casual (1 a 2 renglones cortos). Di que es un rolón, que esa sí es música o pon algo alegre estilo fiesta mexicana. Si es "El amor" o "Estibfeliz", ponte un poquitito apenada/complacida.`
-                        : `El usuario "${authorName}" acaba de poner la canción "${songQuery}" en el bot de música.
-                           REGLAS: Insulta o critica sarcásticamente la canción o los feos gustos musicales del usuario usando modismos mexicanos y humor negro/ácido (1 a 2 renglones cortos). Di cosas como "qué rola tan más fea", "me van a sangrar los oídos", "quiten eso porfa", etc. Con estilo tsundere/sarcástico.`;
+                const musicPrompt = isBanda
+                    ? `El usuario o bot acaba de poner la canción de banda/regional "${songQuery}".
+                       REGLAS: Halaga la canción o el gusto musical usando modismos mexicanos de forma casual (1 a 2 renglones cortos). Di que es un rolón, que esa sí es música o pon algo alegre estilo fiesta mexicana. Si mencionan a Estib/El amor, ponte un poquitito apenada/complacida.`
+                    : `El usuario o bot acaba de poner la canción "${songQuery}".
+                       REGLAS: Insulta o critica sarcásticamente la canción o los feos gustos musicales usando modismos mexicanos y humor negro/ácido (1 a 2 renglones cortos). Di cosas como "qué rola tan más fea", "me van a sangrar los oídos", "quiten eso porfa", etc. Con estilo tsundere/sarcástico.`;
 
-                    const completion = await groq.chat.completions.create({
-                        messages: [
-                            {
-                                role: 'system',
-                                content: `Eres Rebeca, una chica mexicana gamer, albina y tsundere. Respondes con modismos mexicanos naturales en 1 o 2 renglones cortos.`
-                            },
-                            {
-                                role: 'user',
-                                content: musicPrompt
-                            }
-                        ],
-                        model: 'qwen/qwen3.8-27b',
-                        max_tokens: 80,
-                        temperature: 0.8
-                    });
+                const completion = await groq.chat.completions.create({
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Eres Rebeca, una chica mexicana gamer, albina y tsundere. Respondes con modismos mexicanos naturales en 1 o 2 renglones cortos.`
+                        },
+                        {
+                            role: 'user',
+                            content: musicPrompt
+                        }
+                    ],
+                    model: 'qwen/qwen3.8-27b',
+                    max_tokens: 80,
+                    temperature: 0.8
+                });
 
-                    const musicReply = completion.choices[0]?.message?.content;
-                    if (musicReply) {
-                        message.channel.send(musicReply);
-                    }
-                } catch (err) {
-                    console.error('Error al responder a la música:', err);
+                const musicReply = completion.choices[0]?.message?.content;
+                if (musicReply) {
+                    message.channel.send(musicReply);
                 }
+            } catch (err) {
+                console.error('Error al responder a la música:', err);
             }
         }
     }
+
+    // Si el mensaje es de otro bot que no mandó comandos de música, lo ignoramos para evitar bucles o chats innecesarios
+    if (message.author.bot) return;
 
     // --- COMANDOS DE INTERACCIÓN EN ESPAÑOL ---
     const actionsMap = {
@@ -120,7 +128,7 @@ client.on('messageCreate', async (message) => {
         // PROTECCIÓN ESPECIAL: NADIE PUEDE BESAR A REBECA
         if ((command === '!beso' || command === '!besar') && targetUser && targetUser.id === client.user.id) {
             const rejectionText = isEstib 
-                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper roja, se ajusta los lentes y voltea a otro lado-*\n¡O-oye! ¿Qué te pasa? ¡No hagas eso aquí en público, despistado! 🫣`
+                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper roja, se ajusta los lentes y voltea a otro lado-*\n¡O-oye! ¿Qué te pasa? ¡Not hagas eso aquí en público, despistado! 🫣`
                 : `**${authorName}** intentó besar a Rebeca... 🛑\n*-le da un empujón con cara de asco-*\n¡Ni lo sueñes! Aléjate de mí, qué asco me das... 🙄`;
 
             const gifUrl = await fetchAnimeGif('slap');
