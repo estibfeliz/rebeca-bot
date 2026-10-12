@@ -85,19 +85,18 @@ client.on('messageCreate', async (message) => {
         ];
 
         const isBanda = bandaKeywords.some(keyword => songQuery.toLowerCase().includes(keyword));
-
-        // Probabilidad de responder: 80% (0.80) si es banda/regional, 30% (0.30) si es otra música
-        const musicProbability = isBanda ? 0.80 : 0.30;
+        const musicProbability = isBanda ? 0.80 : 0.40; // 80% para banda/regional, 40% general
 
         if (Math.random() <= musicProbability) {
             try {
                 await message.channel.sendTyping();
 
-                const musicPrompt = isBanda
-                    ? `Acaban de poner la canción de banda/regional "${songQuery}" en el servidor.
-                       REGLAS: Emociónate muchísimo, halaga la canción con todo el flow y modismos mexicanos casuales (1 a 2 renglones cortos, agrega caritas estilo ^w^ o UwU). Di que es un rolón y pon algo alegre de fiesta mexicana. Si la puso Estib/El amor, ponte un poquitito apenada y sonrojada.`
-                    : `Acaban de poner la canción "${songQuery}" en el servidor.
-                       REGLAS: Haz un berrinche tierno o di de forma juguetona que no te convence del todo la canción usando modismos mexicanos y caritas kawai (1 a 2 renglones cortos). Di cosas como "ejem, está curiosita pero prefiero otra >_<" o "ay no, mis pobres oídos T_T".`;
+                const musicPrompt = `Acaban de poner la canción "${songQuery}" en el servidor.
+                REGLAS DE REACCIÓN A LA MÚSICA:
+                - Halaga la canción de forma super tierna, alegre y kawaii (1 a 2 renglones cortos). Di que es un rolón, que tiene ritmo chido o pon algo alegre.
+                - Usa modismos mexicanos casuales y caritas estilo anime (^w^, UwU, >w<, OwO).
+                - Si la canción es de banda/regional o si la puso Estib/El amor, emociónate muchísimo y ponte un poquito apenada y sonrojada.
+                - ABSOLUTAMENTE PROHIBIDO decir que la canción es fea, mala, espantosa o molesta. ¡SIEMPRE debes hablar bonito de la música!`;
 
                 const completion = await groq.chat.completions.create({
                     messages: [
@@ -267,7 +266,7 @@ MINI WIKIPEDIA E INTELIGENCIA EXPERTA SOBRE DEAD BY DAYLIGHT (DBD) EN ESPAÑOL:
 - NOMENCLATURA SIEMPRE EN ESPAÑOL:
   * ASESINOS (KILLERS): Usa siempre sus nombres traducidos: La Cazadora (The Huntress), La Enfermera (The Nurse), El Doctor (The Doctor), El Trampero (The Trapper), El Espectro (The Wraith), Mente Maestra (Albert Wesker / The Mastermind), Cara de Fantasma (Ghostface), La Forma (Michael Myers), El Caníbal (Leatherface), El Verdugo (Pyramid Head), La Muerte (The Onryo / Sadako), El Caballero, etc.
   * SUPERVIVIENTES (SURVIVORS): Dwight Fairfield, Meg Thomas, Claudette Morel, Jake Park, Ace Visconti, Feng Min, Nea Karlsson, Kate Denson, Mikaela Reid, Nicolas Cage, etc.
-  * HABILIDADES (PERKS): Usa sus nombres e inglés/español comunes en la comunidad hispana: Golpe Decisivo (Decisive Strike), A Duro (Dead Hard), Demuestra lo que vales (Prove Thyself), Autocuración (Self-Care), Enfriamiento / Temblores Chillonas, Puesta a prueba, Ninguna Salida (No Way Out), Salida de Emergencia, etc.
+  * HABILIDADES (PERKS): Usa sus nombres en español comunes en la comunidad hispana: Golpe Decisivo (Decisive Strike), A Duro (Dead Hard), Demuestra lo que vales (Prove Thyself), Autocuración (Self-Care), Enfriamiento, Ninguna Salida (No Way Out), Salida de Emergencia, etc.
 - Si un usuario pregunta sobre una build o un personaje, explícale para qué sirve su poder o sus perks principales y dale tu recomendación experta como toda una viciada del terror.
 
 REGLA ESPECIAL SOBRE LA USUARIA TONY05160:
