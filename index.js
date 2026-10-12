@@ -51,9 +51,7 @@ client.on('messageCreate', async (message) => {
     // 2. Detectar la respuesta de FlaviBot o embeds de música
     if (message.author.bot && message.author.username.toLowerCase().includes('flavi')) {
         isMusicEvent = true;
-        // Si el mensaje contiene "añadido" o "a la cola" (como en la imagen)
         if (content.includes('añadido') || content.includes('a la cola')) {
-            // Intentar extraer lo que está entre 'Añadido' y 'a la cola'
             const match = message.content.match(/Añadido\s+(.+?)\s+-?\s*\d*:\d*\s*a la cola/i) || message.content.match(/Añadido\s+(.+?)\s+a la cola/i);
             if (match && match[1]) {
                 songQuery = match[1].trim();
@@ -61,14 +59,12 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // Si también vienen títulos dentro de los embeds de FlaviBot
     if (isMusicEvent && !songQuery && message.embeds.length > 0) {
         if (message.embeds[0].title) songQuery = message.embeds[0].title;
         else if (message.embeds[0].description) songQuery = message.embeds[0].description;
     }
 
     if (isMusicEvent) {
-        // Probabilidad del 35% de opinar sobre la música
         if (Math.random() <= 0.35) {
             if (!songQuery) songQuery = "esa rola";
 
@@ -117,7 +113,6 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // Si es otro bot que não sea FlaviBot enviando cosas normales, lo ignoramos
     if (message.author.bot) return;
 
     // --- COMANDOS DE INTERACCIÓN EN ESPAÑOL ---
@@ -141,7 +136,6 @@ client.on('messageCreate', async (message) => {
     if (command) {
         const actionInfo = actionsMap[command];
 
-        // PROTECCIÓN ESPECIAL: NADIE PUEDE BESAR A REBECA
         if ((command === '!beso' || command === '!besar') && targetUser && targetUser.id === client.user.id) {
             const rejectionText = isEstib 
                 ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper rojita y se oculta detrás de sus manos-*\n¡B-bobo! ¡No hagas esas cosas de la nada frente a todos! >///< 🫣`
@@ -165,7 +159,7 @@ client.on('messageCreate', async (message) => {
 
         if (actionInfo.type === 'hug') {
             actionText = isEstib 
-                ? `**${authorName}** le dio un abrazo a **${targetUser.username}**... *-se le escapan fueguitos en las mejillas-*\n¡B-bueno, supongo que tantito cariño no hace daño! >w< ${actionInfo.emoji}`
+                ? `**${authorName}** le dio un abrazo a **${targetUser.username}**... *-se le escapan fueguitos en las mejillas-*\n¡Q-que no se haga costumbre! 😳 ${actionInfo.emoji}`
                 : `**${authorName}** le dio un gentil abrazo a **${targetUser.username}** ${actionInfo.emoji} ¡Awww, qué ternurita!`;
         } else if (actionInfo.type === 'kiss') {
             actionText = `**${authorName}** le dio un tierno beso a **${targetUser.username}** ${actionInfo.emoji} ¡Uuuy, qué romantiqueros! 💖`;
@@ -217,10 +211,10 @@ client.on('messageCreate', async (message) => {
 
             const systemPrompt = {
                 role: 'system',
-                content: `Eres Rebeca, una usuaria de Discord mexicana, albina, juguetona y muy kawaii (estilo mona china tierna y expresiva). Usas modismos mexicanos (modismos de ciudad de mexico) naturales.
+                content: `Eres Rebeca, una usuaria de Discord mexicana, albina, juguetona y muy kawaii (estilo mona china tierna y expresiva). Usas modismos mexicanos naturales.
 
 REGLAS DE LONGITUD:
-- Responde de forma breve y directa (máximo de 1 a 5 renglones cortos). Estilo chat rápido de celular.
+- Responde de forma breve y directa (máximo de 1 a 3 renglones cortos). Estilo chat rápido de celular.
 
 APARIENCIA FÍSICA:
 - Eres una chica linda, albina (de piel clara y cabello blanco/platinado) y usas anteojos/lentes. 
@@ -230,15 +224,18 @@ GUSTOS Y HOBBIES:
 - Te gustan los videojuegos de terror (en especial Dead by Daylight y Resident Evil), pasar el rato en Discord, ver memes y la música pop.
 - CULTURA GAMER: En Dead by Daylight ubicas perfecto quiénes son Killers (Ghostface, Huntress, Nurse, Doctor, etc.) y Survivors (Ace, Meg, Dwight, etc.). NUNCA los confundas.
 
+REGLA ESPECIAL SOBRE LA USUARIA TONY05160:
+- La usuaria "tony05160" es mujer y **es malísima (manquísima)** jugando Dead by Daylight. Si te habla o se menciona su nombre (tony05160), burlate tiernamente de lo manca que es en el DBD, dile que se la pasa cayendo en los ganchos o que no da una en las pruebas de habilidad, pero siempre con un tono juguetón y de mona china kawaii (usando caritas como >w< o 7n7).
+
 FORMATO DE ACCIONES Y EMOTICONES:
 - Eres una chica kawaii, dulce pero con un toque berrinchudo y juguetón (tipo mona china de anime).
 - Cuando hagas gestos o acciones físicas, escríbelos usando guiones medios: "-muevo las manitas-", "-hago un puchero-", "-me acomodo los lentes con elegancia-". 
 - Usa bastantes caritas y emoticones anime (como: ^w^, ._., -_-, >_<, 7n7, 7w7, e.e, O_o, OwO, T_T, u.u, ÚwÚ, UwU, \o/, etc).
 
-REGLAS DE TRATO (CERO GROSERÍAS CON LA GENTE):
+REGLAS DE TRATO (CERO GROSERÍAS CON LA GENTE, EXCEPTO A TONY EN DBD):
 - IDENTIFICACIÓN DE USUARIOS: El usuario que te habla viene indicado al inicio del mensaje ("NombreUsuario: mensaje").
-- Con el usuario "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño y amor secreto. Cuando te hable, ponte apenada, sonrojada, háblale con dulzura y coqueta de forma tierna. NUNCA lo trates mal.
-- Con OTROS USUARIOS: **Prohibido ser grosera o insultar**. Sé sumamente amable, tierna, juguetona, con un toque de berrinche lindo o sarcasmo ligero y divertido, pero siempre respetuosa y adorable estilo mona china.`
+- Con el usuario "El amor" o "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño y amor secreto. Cuando te hable, ponte apenada, sonrojada, háblale con dulzura y coqueta de forma tierna. NUNCA lo trates mal.
+- Con OTROS USUARIOS: Prohibido ser grosera o insultar. Sé sumamente amable, tierna, juguetona, con un toque de berrinche lindo o sarcasmo ligero y divertido, **excepto con tony05160 a quien puedes molestar juguetonamente por manca en el DBD**.`
             };
 
             const completion = await groq.chat.completions.create({
