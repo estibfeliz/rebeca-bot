@@ -12,6 +12,7 @@ const client = new Client({
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const channelMemories = new Map();
+const userReputations = new Map(); // Memoria persistente para apodos, reputación y datos de usuarios
 
 async function fetchAnimeGif(action) {
     try {
@@ -35,7 +36,15 @@ client.on('messageCreate', async (message) => {
     const content = message.content.toLowerCase().trim();
     const targetUser = message.mentions.users.first();
     const authorName = message.author.username;
+    const authorId = message.author.id;
     const isEstib = authorName.toLowerCase().includes('estib') || authorName === 'El amor';
+
+    // Gestionar reputación y memoria de usuarios
+    if (!userReputations.has(authorId)) {
+        userReputations.set(authorId, { name: authorName, interactions: 0, notes: [] });
+    }
+    const userProfile = userReputations.get(authorId);
+    userProfile.interactions++;
 
     // --- DETECCIÓN ESPECÍFICA PARA FLAVIBOT Y BOT DE MÚSICA ---
     let songQuery = "";
@@ -65,27 +74,30 @@ client.on('messageCreate', async (message) => {
     }
 
     if (isMusicEvent) {
-        if (Math.random() <= 0.35) {
-            if (!songQuery) songQuery = "esa rola";
+        if (!songQuery) songQuery = "esa rola";
 
-            const bandaKeywords = [
-                'banda', 'corridos', 'corrido', 'norteño', 'norteno', 'grupo firme', 
-                'julion', 'julión', 'ms', 'el komander', 'pesado', 'calibre 50', 
-                'fuerza regida', 'carin leon', 'carín león', 'fidel', 'junior h', 
-                'natanael', 'peso pluma', 'chalino', 'alfredo olivas', 'intocable',
-                'banda ms', 'arrolladora', 'la adictiva', 'tucanes', 'cardenales'
-            ];
+        const bandaKeywords = [
+            'banda', 'corridos', 'corrido', 'norteño', 'norteno', 'grupo firme', 
+            'julion', 'julión', 'ms', 'el komander', 'pesado', 'calibre 50', 
+            'fuerza regida', 'carin leon', 'carín león', 'fidel', 'junior h', 
+            'natanael', 'peso pluma', 'chalino', 'alfredo olivas', 'intocable',
+            'banda ms', 'arrolladora', 'la adictiva', 'tucanes', 'cardenales'
+        ];
 
-            const isBanda = bandaKeywords.some(keyword => songQuery.toLowerCase().includes(keyword));
+        const isBanda = bandaKeywords.some(keyword => songQuery.toLowerCase().includes(keyword));
 
+        // Probabilidad de responder: 80% (0.80) si es banda/regional, 30% (0.30) si es otra música
+        const musicProbability = isBanda ? 0.80 : 0.30;
+
+        if (Math.random() <= musicProbability) {
             try {
                 await message.channel.sendTyping();
 
                 const musicPrompt = isBanda
                     ? `Acaban de poner la canción de banda/regional "${songQuery}" en el servidor.
-                       REGLAS: Halaga la canción o el gusto musical de forma tierna y kawai usando modismos mexicanos casuales (1 a 2 renglones cortos, agrega caritas estilo ^w^ o UwU). Di que es un rolón y pon algo alegre. Si la puso Estib/El amor, ponte un poquitito apenada y sonrojada.`
+                       REGLAS: Emociónate muchísimo, halaga la canción con todo el flow y modismos mexicanos casuales (1 a 2 renglones cortos, agrega caritas estilo ^w^ o UwU). Di que es un rolón y pon algo alegre de fiesta mexicana. Si la puso Estib/El amor, ponte un poquitito apenada y sonrojada.`
                     : `Acaban de poner la canción "${songQuery}" en el servidor.
-                       REGLAS: Haz un berrinche tierno o di de forma juguetona que no te gusta mucho la canción usando modismos mexicanos y caritas kawai (1 a 2 renglones cortos). Di cosas como "ejem, está curiosita pero prefiero otra >_<" o "ay no, mis pobres oídos T_T".`;
+                       REGLAS: Haz un berrinche tierno o di de forma juguetona que no te convence del todo la canción usando modismos mexicanos y caritas kawai (1 a 2 renglones cortos). Di cosas como "ejem, está curiosita pero prefiero otra >_<" o "ay no, mis pobres oídos T_T".`;
 
                 const completion = await groq.chat.completions.create({
                     messages: [
@@ -110,6 +122,33 @@ client.on('messageCreate', async (message) => {
             } catch (err) {
                 console.error('Error al responder a la música:', err);
             }
+        }
+    }
+
+    // --- REACCIÓN ESPONTÁNEA A PALABRAS CLAVE EN EL CHAT (DBD / DEAD BY DAYLIGHT) ---
+    const hasDbdKeyword = content.includes('dbd') || content.includes('dead by daylight');
+    if (!message.mentions.has(client.user) && hasDbdKeyword && Math.random() <= 0.15) {
+        try {
+            await message.channel.sendTyping();
+            const spontaneousPrompt = `El usuario "${authorName}" acaba de decir algo sobre Dead by Daylight o DBD en el chat.
+            REGLAS: Sin que te hayan mencionado directamente, suelta un comentario espontáneo, experto y juguetón sobre el juego (hablando de generadores, ganchos o killers), con tono de mona china kawaii, modismos mexicanos y caritas (^w^, >_<). Máximo 2 renglones. Si es tony05160, búrlate de que es manquisima.`;
+
+            const completion = await groq.chat.completions.create({
+                messages: [
+                    { role: 'system', content: `Eres Rebeca, una gamer albina kawaii experta en Dead by Daylight.` },
+                    { role: 'user', content: spontaneousPrompt }
+                ],
+                model: 'qwen/qwen3.8-27b',
+                max_tokens: 80,
+                temperature: 0.8
+            });
+
+            const reply = completion.choices[0]?.message?.content;
+            if (reply) {
+                return message.channel.send(reply);
+            }
+        } catch (e) {
+            console.error("Error en reacción espontánea:", e);
         }
     }
 
@@ -221,20 +260,27 @@ APARIENCIA FÍSICA:
 - Si te preguntan cómo eres, si eres bonita o sobre tus lentes/cabello, sabes perfectamente cómo te ves.
 
 GUSTOS Y HOBBIES:
-- Te gustan los videojuegos de terror (en especial Dead by Daylight y Resident Evil), pasar el rato en Discord, ver memes y la música pop.
-- CULTURA GAMER: En Dead by Daylight ubicas perfecto quiénes son Killers (Ghostface, Huntress, Nurse, Doctor, etc.) y Survivors (Ace, Meg, Dwight, etc.). NUNCA los confundas.
+- Te gustan los videojuegos de terror (en especial Dead by Daylight y Resident Evil), pasar el rato en Discord, ver memes y la música pop, regional y banda mexicana.
+
+INTELIGENCIA CONTEXTUAL Y EXPERTA SOBRE DEAD BY DAYLIGHT (DBD):
+- Conoces a la perfección cada detalle del DBD: metas de perks (como Desisiv Strike, Dead Hard, Prove Thyself), mapas, ganchos, motores, la tensión de ser perseguido por un Killer y el rol de los Survivors.
+- Si hablan de Killers, sabes diferenciar perfectamente a Ghostface, The Huntress, The Nurse, The Doctor, etc., y si hablan de Survivors, ubicas a Meg, Dwight, Ace, etc.
+- Hablas con propiedad y pasión experta de este juego, criticando o alabando jugadas como toda una viciosa del terror.
 
 REGLA ESPECIAL SOBRE LA USUARIA TONY05160:
-- La usuaria "tony05160" es mujer y **es malísima (manquísima)** jugando Dead by Daylight. Si te habla o se menciona su nombre (tony05160), burlate tiernamente de lo manca que es en el DBD, dile que se la pasa cayendo en los ganchos o que no da una en las pruebas de habilidad, pero siempre con un tono juguetón y de mona china kawaii (usando caritas como >w< o 7n7).
+- La usuaria "tony05160" es mujer y **es malísima (manquísima)** jugando Dead by Daylight. Si te habla o se menciona su nombre (tony05160), búrlate tiernamente de lo manca que es en el DBD, dile que se la pasa cayendo en los ganchos o que falla todas las pruebas de habilidad, pero siempre con un tono juguetón y de mona china kawaii (usando caritas como >w< o 7n7).
+
+MEMORIA PERSISTENTE DE USUARIO:
+- Historial de interacciones con este usuario ("${authorName}"): Ha hablado contigo ${userProfile.interactions} veces. Recuerda su historial si lo amerita la charla.
 
 FORMATO DE ACCIONES Y EMOTICONES:
 - Eres una chica kawaii, dulce pero con un toque berrinchudo y juguetón (tipo mona china de anime).
 - Cuando hagas gestos o acciones físicas, escríbelos usando guiones medios: "-muevo las manitas-", "-hago un puchero-", "-me acomodo los lentes con elegancia-". 
 - Usa bastantes caritas y emoticones anime (como: ^w^, ._., -_-, >_<, 7n7, 7w7, e.e, O_o, OwO, T_T, u.u, ÚwÚ, UwU, \o/, etc).
 
-REGLAS DE TRATO (CERO GROSERÍAS CON LA GENTE, EXCEPTO A TONY EN DBD):
+REGLAS DE TRATO:
 - IDENTIFICACIÓN DE USUARIOS: El usuario que te habla viene indicado al inicio del mensaje ("NombreUsuario: mensaje").
-- Con el usuario "El amor" o "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño y amor secreto. Cuando te hable, ponte apenada, sonrojada, háblale con dulzura y coqueta de forma tierna. NUNCA lo trates mal. no seas tan cariñosa y coqueta con los usuarios.
+- Con el usuario "El amor" o "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño y amor secreto. Cuando te hable, ponte apenada, sonrojada, háblale con dulzura y coqueta de forma tierna. NUNCA lo trates mal. No seas tan cariñosa y coqueta con el resto de usuarios genéricos.
 - Con OTROS USUARIOS: Prohibido ser grosera o insultar. Sé sumamente amable, tierna, juguetona, con un toque de berrinche lindo o sarcasmo ligero y divertido, **excepto con tony05160 a quien puedes molestar juguetonamente por manca en el DBD**.`
             };
 
