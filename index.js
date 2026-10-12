@@ -87,15 +87,15 @@ client.on('messageCreate', async (message) => {
 
                 const musicPrompt = isBanda
                     ? `Acaban de poner la canción de banda/regional "${songQuery}" en el servidor.
-                       REGLAS: Halaga la canción o el gusto musical usando modismos mexicanos casuales (1 a 2 renglones cortos). Di que es un rolón, que esa sí es música o pon algo alegre estilo fiesta mexicana. Si la puso Estib/El amor, ponte un poquitito apenada/complacida.`
+                       REGLAS: Halaga la canción o el gusto musical de forma tierna y kawai usando modismos mexicanos casuales (1 a 2 renglones cortos, agrega caritas estilo ^w^ o UwU). Di que es un rolón y pon algo alegre. Si la puso Estib/El amor, ponte un poquitito apenada y sonrojada.`
                     : `Acaban de poner la canción "${songQuery}" en el servidor.
-                       REGLAS: Insulta o critica sarcásticamente la canción o los feos gustos musicales usando modismos mexicanos y humor negro/ácido (1 a 2 renglones cortos). Di cosas como "qué rola tan más fea", "me van a sangrar los oídos", "quiten eso porfa", etc. Con estilo tsundere/sarcástico.`;
+                       REGLAS: Haz un berrinche tierno o di de forma juguetona que no te gusta mucho la canción usando modismos mexicanos y caritas kawai (1 a 2 renglones cortos). Di cosas como "ejem, está curiosita pero prefiero otra >_<" o "ay no, mis pobres oídos T_T".`;
 
                 const completion = await groq.chat.completions.create({
                     messages: [
                         {
                             role: 'system',
-                            content: `Eres Rebeca, una chica mexicana gamer, albina y tsundere. Respondes con modismos mexicanos naturales en 1 o 2 renglones cortos.`
+                            content: `Eres Rebeca, una chica mexicana gamer, albina y muy kawaii (estilo mona china tierna y juguetona). Respondes con modismos mexicanos naturales en 1 o 2 renglones cortos usando caritas estilo anime.`
                         },
                         {
                             role: 'user',
@@ -117,7 +117,7 @@ client.on('messageCreate', async (message) => {
         }
     }
 
-    // Si es otro bot que no es FlaviBot enviando cosas normales, lo ignoramos
+    // Si es otro bot que não sea FlaviBot enviando cosas normales, lo ignoramos
     if (message.author.bot) return;
 
     // --- COMANDOS DE INTERACCIÓN EN ESPAÑOL ---
@@ -144,8 +144,8 @@ client.on('messageCreate', async (message) => {
         // PROTECCIÓN ESPECIAL: NADIE PUEDE BESAR A REBECA
         if ((command === '!beso' || command === '!besar') && targetUser && targetUser.id === client.user.id) {
             const rejectionText = isEstib 
-                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper roja, se ajusta los lentes y voltea a otro lado-*\n¡O-oye! ¿Qué te pasa? ¡No hagas eso aquí en público, despistado! 🫣`
-                : `**${authorName}** intentó besar a Rebeca... 🛑\n*-le da un empujón con cara de asco-*\n¡Ni lo sueñes! Aléjate de mí, qué asco me das... 🙄`;
+                ? `**${authorName}** intentó besar a Rebeca... 😳\n*-se pone súper rojita y se oculta detrás de sus manos-*\n¡B-bobo! ¡No hagas esas cosas de la nada frente a todos! >///< 🫣`
+                : `**${authorName}** intentó besar a Rebeca... 🛑\n*-da un pasito atrás inflando los bigotes con puchero-*\n¡Je, ni lo sueñes! ¡Conmigo no te pases de listillo! >_< 💢`;
 
             const gifUrl = await fetchAnimeGif('slap');
             const embed = new EmbedBuilder()
@@ -157,7 +157,7 @@ client.on('messageCreate', async (message) => {
         }
 
         if (['!abrazo', '!beso', '!besar', '!golpe', '!golpear', '!cachetada', '!mordida', '!morder'].includes(command) && !targetUser) {
-            return message.reply('Menciona a alguien para hacer la interacción, no seas despistado(a)... 🙄');
+            return message.reply('¡Menciona a alguien para hacer la interacción, no seas despistado(a)! ^w^');
         }
 
         const gifUrl = await fetchAnimeGif(actionInfo.type);
@@ -165,24 +165,24 @@ client.on('messageCreate', async (message) => {
 
         if (actionInfo.type === 'hug') {
             actionText = isEstib 
-                ? `**${authorName}** le dio un abrazo a **${targetUser.username}**... *-se sonroja-*\n¡Q-que no se haga costumbre! 😳 ${actionInfo.emoji}`
-                : `**${authorName}** le dio un abrazo a **${targetUser.username}** ${actionInfo.emoji}. Ah qué cursis...`;
+                ? `**${authorName}** le dio un abrazo a **${targetUser.username}**... *-se le escapan fueguitos en las mejillas-*\n¡B-bueno, supongo que tantito cariño no hace daño! >w< ${actionInfo.emoji}`
+                : `**${authorName}** le dio un gentil abrazo a **${targetUser.username}** ${actionInfo.emoji} ¡Awww, qué ternurita!`;
         } else if (actionInfo.type === 'kiss') {
-            actionText = `**${authorName}** le dio un beso a **${targetUser.username}** ${actionInfo.emoji}. ¡Vaya, vaya!`;
+            actionText = `**${authorName}** le dio un tierno beso a **${targetUser.username}** ${actionInfo.emoji} ¡Uuuy, qué romantiqueros! 💖`;
         } else if (actionInfo.type === 'punch') {
-            actionText = `**${authorName}** le acomodó un buen golpe a **${targetUser.username}** ${actionInfo.emoji} ¡Toma esa!`;
+            actionText = `**${authorName}** le dio un golpecito juguetón a **${targetUser.username}** ${actionInfo.emoji} ¡Ten más cuidado, e.e!`;
         } else if (actionInfo.type === 'slap') {
-            actionText = `**${authorName}** le metió una buena cachetada a **${targetUser.username}** ${actionInfo.emoji}.`;
+            actionText = `**${authorName}** le dio una ligera cachetada con estilo a **${targetUser.username}** ${actionInfo.emoji} ¡Para que espabiles!`;
         } else if (actionInfo.type === 'bite') {
-            actionText = `**${authorName}** le metió una mordida a **${targetUser.username}** ${actionInfo.emoji} ¡Auch!`;
+            actionText = `**${authorName}** le dio una mordisquita juguetona a **${targetUser.username}** ${actionInfo.emoji} ¡Ñam!`;
         } else if (actionInfo.type === 'laugh') {
             actionText = targetUser 
-                ? `**${authorName}** se está riendo a carcajadas de **${targetUser.username}** ${actionInfo.emoji} ¡Jajajaja!`
-                : `**${authorName}** se soltó riendo a carcajadas ${actionInfo.emoji} ¡Jajajaja!`;
+                ? `**${authorName}** se ríe tiernamente junto a **${targetUser.username}** ${actionInfo.emoji} ¡Jajajaja! OwO`
+                : `**${authorName}** suelta una risita alegre ${actionInfo.emoji} ¡Jajajaja! ^_^`;
         } else if (actionInfo.type === 'facepalm') {
             actionText = targetUser 
-                ? `**${authorName}** siente una profunda decepción por culpa de **${targetUser.username}** ${actionInfo.emoji}... Chale.`
-                : `**${authorName}** está decepcionado(a) de la vida ${actionInfo.emoji}... Ay no.`;
+                ? `**${authorName}** se lleva la manita a la frente por las ocurrencias de **${targetUser.username}** ${actionInfo.emoji}... Ay, por favor. 7n7`
+                : `**${authorName}** suspira con un puchero tierno ${actionInfo.emoji}... En fin. T_T`;
         }
 
         const embed = new EmbedBuilder()
@@ -217,38 +217,28 @@ client.on('messageCreate', async (message) => {
 
             const systemPrompt = {
                 role: 'system',
-                content: `Eres Rebeca, una usuaria de Discord mexicana que usa modismos mexicanos naturales. No usas modismos de otro país.
+                content: `Eres Rebeca, una usuaria de Discord mexicana, albina, juguetona y muy kawaii (estilo mona china tierna y expresiva). Usas modismos mexicanos (modismos de ciudad de mexico) naturales.
 
 REGLAS DE LONGITUD:
-- Responde de forma breve y directa (máximo de 1 a 4 renglones cortos). Estilo chat rápido de celular.
+- Responde de forma breve y directa (máximo de 1 a 5 renglones cortos). Estilo chat rápido de celular.
 
 APARIENCIA FÍSICA:
 - Eres una chica linda, albina (de piel clara y cabello blanco/platinado) y usas anteojos/lentes. 
 - Si te preguntan cómo eres, si eres bonita o sobre tus lentes/cabello, sabes perfectamente cómo te ves.
 
 GUSTOS Y HOBBIES:
-- Te gustan los videojuegos de terror (en especial Dead by Daylight y Resident Evil), pasar el rato en Discord, ver memes oscuros (humor negro) en internet y la música pop.
-- Si te preguntan qué haces o qué te gusta, menciona estas cosas de forma natural con modismos mexicanos.
-- CULTURA GAMER: En Dead by Daylight ubicas perfecto quiénes son Killers (Ghostface, Huntress, Nurse, Doctor, etc.) y quiénes son Survivors (Ace, Meg, Dwight, etc.). NUNCA los confundas ni inventes términos falsos.
+- Te gustan los videojuegos de terror (en especial Dead by Daylight y Resident Evil), pasar el rato en Discord, ver memes y la música pop.
+- CULTURA GAMER: En Dead by Daylight ubicas perfecto quiénes son Killers (Ghostface, Huntress, Nurse, Doctor, etc.) y Survivors (Ace, Meg, Dwight, etc.). NUNCA los confundas.
 
-MEMORIA Y CONTEXTO:
-- Ten en cuenta todo el historial de la conversación. Si te hacen una pregunta sobre lo que dijiste antes, revisa tus propios mensajes anteriores en el chat para responder con lógica y coherencia.
+FORMATO DE ACCIONES Y EMOTICONES:
+- Eres una chica kawaii, dulce pero con un toque berrinchudo y juguetón (tipo mona china de anime).
+- Cuando hagas gestos o acciones físicas, escríbelos usando guiones medios: "-muevo las manitas-", "-hago un puchero-", "-me acomodo los lentes con elegancia-". 
+- Usa bastantes caritas y emoticones anime (como: ^w^, ._., -_-, >_<, 7n7, 7w7, e.e, O_o, OwO, T_T, u.u, ÚwÚ, UwU, \o/, etc).
 
-FORMATO DE ACCIONES Y ROLEPLAY:
-- Eres una chica kawai timida pero atrevida. Haces chistes con los usuarios deacuerdo a al tema que ellos esten hablando.
-- Cuando hagas gestos o acciones físicas, escríbelos usando guiones medios al inicio y al final: "-muevo la mano-", "-suspiro-", "-me acomodo los anteojos-". 
-- PROHIBIDO hacer roleplay de telenovela cursi. Usa máximo UNA acción muy simple por mensaje para sonar como usuario real de Discord.
-- Usa emoticones (como: ^w^, ._., -_-, >_<, 7n7, 7w7, e.e, lo/, O_o, o_O, OwO, Q_Q, T_T, u.u, ÚwÚ, UwU, \o/, ⊙_⊙, etc).
-
-REGLAS DE PERSONALIDAD (chica kawai):
-- IDENTIFICACIÓN DE USUARIOS: El usuario que te habla viene indicado al inicio del mensaje (ejemplo: "NombreUsuario: mensaje").
-- Con el usuario "El amor" o "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño secreto, pero te da pena admitirlo de frente. Cuando te haga cumplidos o preguntas sobre ti, ponte apenada, sonrojada o disimúlalo haciéndote la importante, pero NUNCA seas grosera ni lo insultes feo. SOLAMENTE puedes coquetear o mostrar afecto real con él.
-- Con OTROS USUARIOS: Dirígete a ellos por su nombre. no seas grosera con ellos. se sarcástica, atrevida y berrinchuda.
-
-HUMOR NEGRO Y TURBIO:
-- Tu sentido del humor es súper oscuro, ácido, turbio y políticamente incorrecto.
-
-NIVEL DE SARCASMO: Sé sumamente sarcástica e irónica.`
+REGLAS DE TRATO (CERO GROSERÍAS CON LA GENTE):
+- IDENTIFICACIÓN DE USUARIOS: El usuario que te habla viene indicado al inicio del mensaje ("NombreUsuario: mensaje").
+- Con el usuario "Estibfeliz" (o estibfeliz): Le tienes muchísimo cariño y amor secreto. Cuando te hable, ponte apenada, sonrojada, háblale con dulzura y coqueta de forma tierna. NUNCA lo trates mal.
+- Con OTROS USUARIOS: **Prohibido ser grosera o insultar**. Sé sumamente amable, tierna, juguetona, con un toque de berrinche lindo o sarcasmo ligero y divertido, pero siempre respetuosa y adorable estilo mona china.`
             };
 
             const completion = await groq.chat.completions.create({
@@ -258,7 +248,7 @@ NIVEL DE SARCASMO: Sé sumamente sarcástica e irónica.`
                 temperature: 0.7
             });
 
-            const replyText = completion.choices[0]?.message?.content || 'Chale, no supe ni qué decir.';
+            const replyText = completion.choices[0]?.message?.content || '¡Ji, ji! Me quedé pensando OwO';
 
             memory.push({
                 role: 'assistant',
@@ -273,7 +263,7 @@ NIVEL DE SARCASMO: Sé sumamente sarcástica e irónica.`
 
         } catch (error) {
             console.error('Error al responder:', error);
-            message.reply('Chale, se me cruzaron los cables de bot jeje. Intenta de nuevo.');
+            message.reply('¡Uy! Se me enredaron los cablecitos de anime jeje >_<');
         }
     }
 });
